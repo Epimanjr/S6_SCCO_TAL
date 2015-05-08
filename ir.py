@@ -42,12 +42,15 @@ def read_relevance():
 # Un ensemble des pairs (q,d) ou q est le queryID d'une question pour
 # laquelle d est un docID d'un document qui lui est pertinent.
 relevance = read_relevance()
-
+ 
 def tokenize(text):
     return text.split()
-
+ 
 # frequencies(["ab", "bc", "ab"]) = { "ab" : 2, "bc" : 1 }
-
+# frequencies(tokenize(docs[1])) = { "slipstream": 6,
+#                                    "configuration": 1,
+#                                    ... }
+ 
 def frequencies(toks):
     freqs = {}
     for tok in toks:
@@ -56,11 +59,13 @@ def frequencies(toks):
         else:
             freqs[tok] = 1
     return freqs
-
+ 
 # build_index(...) = { "slipstream": [(1,6), (16,3), ...],
 #                      "configuration": [(1,1), ...],
 #                      ... }
+ 
 
+ 
 def build_index(docs):
     """VOTRE CODE ICI
 
@@ -71,6 +76,7 @@ def build_index(docs):
     # Initialize index (empty list)
     index = {}
 
+    print("Build index ... ")
     # Loop for all documents: 1400
     for docID in docs:
         # Get frequencies for document number docID
@@ -83,12 +89,15 @@ def build_index(docs):
                 index[word] = []
             # In all case, add a new value
             index[word].append((docID, freqs[word]))
-        #if docID > 10:
-        #    break
+        if docID % 140 == 0:
+            percent = docID / 14
+            print(str(percent) + "%")
 
+    print("Build index : Done")
+    print(index)
     return index
  
-def rank_docs(index, query):
+def rank_docs(query, index):
     """VOTRE CODE ICI
 
        Retournez la serie des docIDs ordonner par leur pertinence vis-a-vis
@@ -117,8 +126,7 @@ def rank_docs(index, query):
         
     return ranking
 
-
-
+ 
 def average_precision(qid, ranking):
     relevant = 0
     total = 0
@@ -129,23 +137,25 @@ def average_precision(qid, ranking):
         if (qid, did) in relevance:
             relevant += 1
             precisions.append(float(relevant) / float(total))
-
+ 
     return float(sum(precisions)) / float(len(precisions))
-
-       
-
+ 
+ 
+def uniqify(xs):
+    seen = set()
+    return [ x for x in xs if not (x in seen or seen.add(x)) ]
+ 
+ 
 def mean_average_precision():
     index = build_index(docs)
     aps = []
-
+ 
     for qid in queries:
-        ranking = rank_docs(index, queries[qid])
-        assert len(set(ranking)) == len(ranking), "Duplicates in document ranking."
-        assert len(ranking) == len(docs), "Not enough (or too many) documents in ranking."
-        aps.append(average_precision(qid, ranking))
-
+        ranking = rank_docs(queries[qid], index)
+        normalized_ranking = uniqify(list(ranking) + list(docs.keys()))
+        aps.append(average_precision(qid, normalized_ranking))
+ 
     return float(sum(aps)) / float(len(aps))
-
+ 
 # Imprime le MAP de l'approche implemente
 print("Mean average precision: " + str(mean_average_precision()))
-
