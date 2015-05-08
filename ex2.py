@@ -1,22 +1,14 @@
 #!/usr/bin/env python
  
-### POUR EXECUTER LE FICHIER DANS NOTEPAD++ : 	        C:\Python34\python.exe ex2.py
-### POUR EXECUTER EN LIGNES DE COMMANDES : 		python ex2.py
-
-### PENSER A FAIRE UN : 				import ex1
-### PENSER A FAIRE UN :					import tokenize
-### PENSER A FAIRE UN :					from ex1 import tokenize
-### TESTER EN LANCANT LA FONCTION :		        tokenize(docs[1])
- 
 import re
+# Utile pour les fonctions de tri de listes
 import operator
 
-# ajouté
-from ex1 import tokenize
+# On importe la fonction tokenize du TP précédent.
+from tokenizer import tokenize
  
 # Le chemin vers le dossier contenant les fichiers de la Cranfield collection.
-#data_path = "./cran"
-data_path = "./ex2"
+data_path = "./cran"
  
 def read_docs():
     with open(data_path + "/cran.all.1400") as f:
@@ -51,17 +43,10 @@ def read_relevance():
 # laquelle d est un docID d'un document qui lui est pertinent.
 relevance = read_relevance()
 
- 
-# NOUVELLE FONCTION 1
-# frequencies(["ab","bc","ab"]) --> { "ab" : 2, "bc" : 1 }
-#def frequencies(toks):
-    #freqs = {}
-    #for tok in toks:
-        #if tok in freqs:
-            #freqs[tok] += 1
-        #else:
-            #freqs[tok] = 1
-    #return freqs
+def tokenize(text):
+    return text.split()
+
+# frequencies(["ab", "bc", "ab"]) = { "ab" : 2, "bc" : 1 }
 
 def frequencies(toks):
     freqs = {}
@@ -70,50 +55,11 @@ def frequencies(toks):
             freqs[tok] += 1
         else:
             freqs[tok] = 1
-    #for tok in freqs:
-    #        freqs[tok] = (1,freqs[tok])
     return freqs
 
-# NOUVELLE FONCTION 2
-#def build_index(docs):
-#    """VOTRE CODE ICI
-#
-#       A partir de la collection des documents, construisez une structure
-#       des donnees qui vous permettra d'identifier des documents pertinents
-#       pour une question (e.g., l'index inversee qu'on a vu en classe).
-#    """
-#    index = {}
-#
-#    #for docID in docs:
-#        #freqs = frequencies(tokenize(docs[docID]))
-#        #...
-#
-#    return docs
-
-#def build_index(docs):
-#    """VOTRE CODE ICI
-#
-#       A partir de la collection des documents, construisez une structure
-#       des donnees qui vous permettra d'identifier des documents pertinents
-#       pour une question (e.g., l'index inversee qu'on a vu en classe).
-#    """
-#    index = {}
-#
-#    for docID in docs:
-#        freqs = frequencies(tokenize(docs[docID]))
-#        for tok in freqs: ###
-#            freqs[tok] = (docID,freqs[tok]) ###
-#        print(freqs) ###
-#        # ID DU DOCUMENT ACTUEL
-#        print(docID) ###
-#        # POUR EVITER DE BLOQUER LE PROCESSUS, METTRE UNE VALEUR FAIBLE (EXEMPLE : 'if docID > 10:')
-#        if docID > 10: ###
-#            break ###
-#    # ...
-#    return docs
-
-# Ce que retourne la fonction
-# build_index(...) --> { "mot1": [(1,6), (2,3), ...] "mot2": [(1,9), (2,0), ...]}
+# build_index(...) = { "slipstream": [(1,6), (16,3), ...],
+#                      "configuration": [(1,1), ...],
+#                      ... }
 
 def build_index(docs):
     """VOTRE CODE ICI
@@ -122,23 +68,24 @@ def build_index(docs):
        des donnees qui vous permettra d'identifier des documents pertinents
        pour une question (e.g., l'index inversee qu'on a vu en classe).
     """
+    # Initialize index (empty list)
     index = {}
 
+    # Loop for all documents: 1400
     for docID in docs:
+        # Get frequencies for document number docID
         freqs = frequencies(tokenize(docs[docID]))
-        for tok in freqs: ###
-            if tok not in index.keys():
-                index[tok] = [] 
-            index[tok].append((docID, freqs[tok]));
-        # print(freqs) ###
-        # ID DU DOCUMENT ACTUEL
-        print(docID) ###
-        # POUR EVITER DE BLOQUER LE PROCESSUS, METTRE UNE VALEUR FAIBLE (EXEMPLE : 'if docID > 10:')
-        if docID > 2: ###
-            break ###
-    # ...
-    print(index)
-    print(index.keys())
+        # For each word in this document
+        for word in freqs:
+            # If word is not in our index
+            if word not in index.keys():
+                # Add a new entry
+                index[word] = []
+            # In all case, add a new value
+            index[word].append((docID, freqs[word]))
+        if docID > 10:
+            break
+
     return index
  
 def rank_docs(index, query):
@@ -147,62 +94,54 @@ def rank_docs(index, query):
        Retournez la serie des docIDs ordonner par leur pertinence vis-a-vis
        la question 'query'.
     """
-
-    rank = {}
-
+    # Initialize new list
+    ranking = {}
     for i in range(1, 1401):
-        rank[i] = 0
+        ranking[i] = 0
 
-    
-    for mot in tokenize(query):
-        
-        if mot in index.keys():
+    # For each word in query
+    for word in tokenize(query):
+        # If we have this word in our index
+        if word in index.keys():
+            # For each document in which we can find the word
             for item in index[mot]:
+                # Increase the score
                 rank[item[0]] += item[1]
 
-    print(rank)
-    sorted_x = sorted(rank.items(), key=operator.itemgetter(1))
+    # Sort the list with score
+    sorted_ranking = sorted(ranking.items(), key=operator.itemgetter(1), reverse=True)
     
-    return sorted_x.keys()
- 
- 
- 
+    return sorted_x.items()
+
+
+
 def average_precision(qid, ranking):
-    print(qid)
     relevant = 0
     total = 0
     precisions = []
     
     for did in ranking:
-        print(did)
         total += 1
         if (qid, did) in relevance:
             relevant += 1
-            precisions.append(relevant / total)
- 
-    return sum(precisions) / len(precisions)
- 
+            precisions.append(float(relevant) / float(total))
+
+    return float(sum(precisions)) / float(len(precisions))
+
        
- 
+
 def mean_average_precision():
     index = build_index(docs)
- 
     aps = []
+
     for qid in queries:
         ranking = rank_docs(index, queries[qid])
         assert len(set(ranking)) == len(ranking), "Duplicates in document ranking."
         assert len(ranking) == len(docs), "Not enough (or too many) documents in ranking."
         aps.append(average_precision(qid, ranking))
-        break
-    return sum(aps) / len(aps)
 
-# ajouté
-#tokenize(docs[1])
- 
+    return float(sum(aps)) / float(len(aps))
+
 # Imprime le MAP de l'approche implemente
 print("Mean average precision: " + str(mean_average_precision()))
 
-# NOTES
-# liste = { "cle1": "valeur1", "cle2": "valeur2" }
-# liste = [2,5]
-# liste = (2,5)
