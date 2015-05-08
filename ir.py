@@ -94,7 +94,6 @@ def build_index(docs):
             print(str(percent) + "%")
 
     print("Build index : Done")
-    print(index)
     return index
  
 def rank_docs(query, index):
