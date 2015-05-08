@@ -83,8 +83,8 @@ def build_index(docs):
                 index[word] = []
             # In all case, add a new value
             index[word].append((docID, freqs[word]))
-        if docID > 10:
-            break
+        #if docID > 10:
+        #    break
 
     return index
  
@@ -104,14 +104,18 @@ def rank_docs(index, query):
         # If we have this word in our index
         if word in index.keys():
             # For each document in which we can find the word
-            for item in index[mot]:
+            for item in index[word]:
                 # Increase the score
-                rank[item[0]] += item[1]
+                ranking[item[0]] += item[1]
 
     # Sort the list with score
     sorted_ranking = sorted(ranking.items(), key=operator.itemgetter(1), reverse=True)
-    
-    return sorted_x.items()
+
+    ranking = []
+    for couple in sorted_ranking:
+        ranking.append(couple[0])
+        
+    return ranking
 
 
 
