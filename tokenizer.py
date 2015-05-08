@@ -49,7 +49,14 @@ def raw_versions(fileids):
  
 def tokenize(text):
     #pattern = r' ' '(?x)\w+(-\w+)* |,'' | [][.,;"?():-_`] | \$?\d+(\.\d+)?%?'
-    pattern = r'''(?x) ([A-Z]\.)+ | \w+(-\w+)*  | \$?\d+(\.\d+)?%?  | \.\.\.  | [][.,;"'?():-_`]'''
+    pattern = r'''(?x)
+                ([A-Z]\.)+              
+                |\w+(-\w+)*
+                |\$?\d+(\.\d+)?%?
+                |\.\.\.
+                |[][.,;"'?():-_`]
+                
+                '''
 
     tokens = nltk.regexp_tokenize(text, pattern)
     return tokens
@@ -73,6 +80,8 @@ print("Score: " + str(quality))
  
 # On fait un diff entre la version officielle et la notre et on le montre
 # sur la sortie.
-print_lines(unified_diff(official, our_try,\
-                         fromfile='offical', tofile='our_try',\
-                         lineterm='')) 
+
+#Met print-lines en parametre pour eviter qu'il affiche les lignes 
+#print_lines(unified_diff(official, our_try,\
+#                         fromfile='offical', tofile='our_try',\
+#                         lineterm='')) 
